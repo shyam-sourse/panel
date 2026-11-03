@@ -44,7 +44,7 @@ TerryPanel gives you a familiar Pterodactyl-style experience without Docker, KVM
 On the machine that will run the **panel**:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourname/terrypanel/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shyam-sourse/panel/main/scripts/install.sh | bash
 ```
 
 This installs Node.js if needed, clones the repo to `~/terrypanel`, creates `.env`, installs dependencies, and starts a systemd service. The default login is printed at the end (`admin` / `admin123`) — **change it immediately**.
