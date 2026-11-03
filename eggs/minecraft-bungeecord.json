@@ -1,0 +1,36 @@
+{
+  "id": "minecraft-bungeecord",
+  "name": "Minecraft: BungeeCord",
+  "category": "proxy",
+  "icon": "minecraft",
+  "description": "BungeeCord proxy for connecting multiple Minecraft servers.",
+  "installScript": "node install.js",
+  "startup": "java -Xms{{MEMORY}} -Xmx{{MEMORY}} -jar bungee.jar",
+  "files": {
+    "config.yml": "listeners:\n- query_port: {{PROXY_PORT}}\n  motd: '{{MOTD}}'\n  priorities:\n  - lobby\n  bind_local_address: true\n  host: 0.0.0.0:{{PROXY_PORT}}\n  max_players: 500\n  tab_size: 60\n  force_default_server: false\n  proxy_protocol: false\n  online_mode: {{ONLINE_MODE}}\nservers:\n  lobby:\n    motd: 'lobby'\n    address: 127.0.0.1:25566\n    restricted: false\n",
+    "install.js": "const https = require(\"https\");\nconst fs = require(\"fs\");\n\nfunction get(url) {\n  return new Promise((resolve, reject) => {\n    https.get(url, { headers: { \"user-agent\": \"terrypanel\" } }, (res) => {\n      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {\n        res.resume();\n        return get(res.headers.location).then(resolve, reject);\n      }\n      const chunks = [];\n      res.on(\"data\", (c) => chunks.push(c));\n      res.on(\"end\", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks) }));\n    }).on(\"error\", reject);\n  });\n}\n\n(async () => {\n  console.log(\"Downloading BungeeCord (latest CI build)\");\n  const jar = await get(\"https://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/bootstrap/target/BungeeCord.jar\");\n  if (jar.status !== 200) throw new Error(`BungeeCord download returned ${jar.status}`);\n  fs.writeFileSync(\"bungee.jar\", jar.body);\n  console.log(`Saved bungee.jar (${(jar.body.length / 1024 / 1024).toFixed(1)} MB)`);\n})().catch((err) => {\n  console.error(err.message);\n  process.exit(1);\n});\n"
+  },
+  "variables": [
+    {
+      "key": "PROXY_PORT",
+      "label": "Proxy port",
+      "default": "25565"
+    },
+    {
+      "key": "MEMORY",
+      "label": "Memory (JVM heap)",
+      "default": "512M",
+      "required": true
+    },
+    {
+      "key": "MOTD",
+      "label": "MOTD",
+      "default": "BungeeCord proxy on TerryPanel"
+    },
+    {
+      "key": "ONLINE_MODE",
+      "label": "Online mode",
+      "default": "true"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "static-web",
+  "name": "Static Website",
+  "category": "application",
+  "icon": "app",
+  "description": "Simple static HTML site served by a tiny Node static server. Replace files in public/ using the file manager.",
+  "installScript": "true",
+  "startup": "node server.js",
+  "files": {
+    "server.js": "const http = require(\"http\");\nconst fs = require(\"fs\");\nconst path = require(\"path\");\n\nconst root = path.resolve(__dirname, process.env.WEB_ROOT || \"public\");\nconst port = Number(process.env.PORT || 3000);\nconst types = { html: \"text/html\", css: \"text/css\", js: \"text/javascript\", json: \"application/json\", png: \"image/png\", jpg: \"image/jpeg\", svg: \"image/svg+xml\", ico: \"image/x-icon\" };\n\nhttp.createServer((req, res) => {\n  const urlPath = decodeURIComponent((req.url || \"/\").split(\"?\")[0]);\n  let file = path.join(root, urlPath);\n  if (!file.startsWith(root)) {\n    res.writeHead(403);\n    return res.end(\"Forbidden\");\n  }\n  try {\n    if (fs.statSync(file).isDirectory()) file = path.join(file, \"index.html\");\n    const data = fs.readFileSync(file);\n    const ext = path.extname(file).slice(1).toLowerCase();\n    res.writeHead(200, { \"content-type\": types[ext] || \"application/octet-stream\" });\n    res.end(data);\n  } catch {\n    res.writeHead(404, { \"content-type\": \"text/plain\" });\n    res.end(\"Not found\");\n  }\n}).listen(port, \"0.0.0.0\", () => console.log(`Serving ${root} on http://0.0.0.0:${port}`));\n",
+    "public/index.html": "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\" /><title>My site</title></head>\n<body style=\"font-family:system-ui;padding:40px\">\n<h1>It works</h1>\n<p>Edit public/index.html in the file manager.</p>\n</body>\n</html>\n"
+  },
+  "variables": [
+    {
+      "key": "PORT",
+      "label": "Port",
+      "default": "3000"
+    },
+    {
+      "key": "WEB_ROOT",
+      "label": "Web root folder",
+      "default": "public"
+    }
+  ]
+}

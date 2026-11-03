@@ -1,0 +1,53 @@
+{
+  "id": "minecraft-fabric",
+  "name": "Minecraft: Fabric",
+  "category": "game",
+  "icon": "minecraft",
+  "description": "Fabric modded server. Installs the Fabric loader, downloads the matching Minecraft server jar, and creates the launcher.",
+  "installScript": "printf 'eula=true\\n' > eula.txt && node install.js",
+  "startup": "java -Xms{{MEMORY}} -Xmx{{MEMORY}} -jar fabric-server-launch.jar --nogui",
+  "files": {
+    "server.properties": "server-port={{SERVER_PORT}}\nmotd={{MOTD}}\nonline-mode={{ONLINE_MODE}}\n",
+    "install.js": "const https = require(\"https\");\nconst fs = require(\"fs\");\nconst { spawnSync } = require(\"child_process\");\nconst version = \"{{MC_VERSION}}\";\nconst requestedLoader = \"{{LOADER_VERSION}}\";\nconst installerVersion = \"{{INSTALLER_VERSION}}\";\n\nfunction get(url) {\n  return new Promise((resolve, reject) => {\n    https.get(url, { headers: { \"user-agent\": \"terrypanel\" } }, (res) => {\n      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {\n        res.resume();\n        return get(res.headers.location).then(resolve, reject);\n      }\n      const chunks = [];\n      res.on(\"data\", (c) => chunks.push(c));\n      res.on(\"end\", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks) }));\n    }).on(\"error\", reject);\n  });\n}\n\n(async () => {\n  let loader = requestedLoader;\n  if (!loader || loader === \"latest\") {\n    const meta = JSON.parse((await get(`https://meta.fabricmc.net/v2/versions/loader/${version}`)).body.toString(\"utf8\"));\n    loader = meta[0].loader.version;\n  }\n  const installerUrl = `https://maven.fabricmc.net/net/fabricmc/fabric-installer/${installerVersion}/fabric-installer-${installerVersion}.jar`;\n  console.log(`Downloading Fabric installer ${installerVersion}`);\n  const installer = await get(installerUrl);\n  if (installer.status !== 200) throw new Error(`Fabric installer download returned ${installer.status}`);\n  fs.writeFileSync(\"fabric-installer.jar\", installer.body);\n  console.log(`Installing Fabric loader ${loader} for Minecraft ${version}`);\n  const result = spawnSync(\"java\", [\n    \"-jar\", \"fabric-installer.jar\", \"server\",\n    \"-mcversion\", version,\n    \"-loader\", loader,\n    \"-downloadMinecraft\",\n  ], { stdio: \"inherit\" });\n  if (result.status !== 0) throw new Error(`Fabric installer exited with code ${result.status}`);\n  console.log(\"Fabric server installed. Start it with start.sh or the panel Start button.\");\n})().catch((err) => {\n  console.error(err.message);\n  process.exit(1);\n});\n"
+  },
+  "variables": [
+    {
+      "key": "MC_VERSION",
+      "label": "Minecraft version",
+      "default": "1.21.1",
+      "required": true
+    },
+    {
+      "key": "LOADER_VERSION",
+      "label": "Fabric loader version",
+      "default": "latest",
+      "description": "Use latest to auto-detect."
+    },
+    {
+      "key": "INSTALLER_VERSION",
+      "label": "Fabric installer version",
+      "default": "1.0.1"
+    },
+    {
+      "key": "MEMORY",
+      "label": "Memory (JVM heap)",
+      "default": "2G",
+      "required": true
+    },
+    {
+      "key": "SERVER_PORT",
+      "label": "Server port",
+      "default": "25565"
+    },
+    {
+      "key": "MOTD",
+      "label": "MOTD",
+      "default": "Fabric server on TerryPanel"
+    },
+    {
+      "key": "ONLINE_MODE",
+      "label": "Online mode",
+      "default": "true"
+    }
+  ]
+}

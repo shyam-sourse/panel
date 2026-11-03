@@ -1,0 +1,21 @@
+{
+  "id": "generic-java",
+  "name": "Generic Java",
+  "category": "application",
+  "icon": "app",
+  "description": "Compile and run a plain Java application. Provide a Main.java or a prebuilt jar.",
+  "installScript": "if [ -f Main.java ]; then javac Main.java; fi",
+  "startup": "{{JAVA_CMD}}",
+  "files": {
+    "Main.java": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"TerryPanel Java application started.\");\n    }\n}\n"
+  },
+  "variables": [
+    {
+      "key": "JAVA_CMD",
+      "label": "Startup command",
+      "default": "java Main",
+      "required": true,
+      "description": "Example: java Main or java -jar app.jar"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "minecraft-vanilla",
+  "name": "Minecraft: Vanilla",
+  "category": "game",
+  "icon": "minecraft",
+  "description": "Official Mojang Minecraft server. Install resolves the correct jar for the version from Mojang's manifest, so no object hash is needed.",
+  "installScript": "printf 'eula=true\\n' > eula.txt && node install.js",
+  "startup": "java -Xms{{MEMORY}} -Xmx{{MEMORY}} -jar server.jar --nogui",
+  "files": {
+    "server.properties": "server-port={{SERVER_PORT}}\nmotd={{MOTD}}\nonline-mode={{ONLINE_MODE}}\n",
+    "install.js": "const https = require(\"https\");\nconst fs = require(\"fs\");\nconst version = \"{{MC_VERSION}}\";\n\nfunction get(url) {\n  return new Promise((resolve, reject) => {\n    https.get(url, { headers: { \"user-agent\": \"terrypanel\" } }, (res) => {\n      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {\n        res.resume();\n        return get(res.headers.location).then(resolve, reject);\n      }\n      const chunks = [];\n      res.on(\"data\", (c) => chunks.push(c));\n      res.on(\"end\", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks) }));\n    }).on(\"error\", reject);\n  });\n}\n\n(async () => {\n  const manifest = JSON.parse((await get(\"https://piston-meta.mojang.com/mc/game/version_manifest_v2.json\")).body.toString(\"utf8\"));\n  const entry = manifest.versions.find((v) => v.id === version) || manifest.latest;\n  const metaUrl = entry && entry.url ? entry.url : manifest.versions[0].url;\n  const meta = JSON.parse((await get(metaUrl)).body.toString(\"utf8\"));\n  console.log(`Downloading vanilla ${meta.id} server`);\n  const jar = await get(meta.downloads.server.url);\n  if (jar.status !== 200) throw new Error(`Vanilla download returned ${jar.status}`);\n  fs.writeFileSync(\"server.jar\", jar.body);\n  console.log(`Saved server.jar (${(jar.body.length / 1024 / 1024).toFixed(1)} MB)`);\n})().catch((err) => {\n  console.error(err.message);\n  process.exit(1);\n});\n"
+  },
+  "variables": [
+    {
+      "key": "MC_VERSION",
+      "label": "Minecraft version",
+      "default": "1.21.1",
+      "required": true,
+      "description": "Use \"latest\" for the newest release, or a version id such as 1.21.1."
+    },
+    {
+      "key": "MEMORY",
+      "label": "Memory (JVM heap)",
+      "default": "1G",
+      "required": true
+    },
+    {
+      "key": "SERVER_PORT",
+      "label": "Server port",
+      "default": "25565"
+    },
+    {
+      "key": "MOTD",
+      "label": "MOTD",
+      "default": "Hosted on TerryPanel"
+    },
+    {
+      "key": "ONLINE_MODE",
+      "label": "Online mode",
+      "default": "true"
+    }
+  ]
+}

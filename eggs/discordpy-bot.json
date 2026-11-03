@@ -1,0 +1,31 @@
+{
+  "id": "discordpy-bot",
+  "name": "Discord Bot (discord.py)",
+  "category": "bot",
+  "icon": "discord",
+  "description": "discord.py bot in an isolated virtualenv. No token is requested while creating the server; add DISCORD_TOKEN later under Startup & Env.",
+  "installScript": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt",
+  "startup": ".venv/bin/python {{ENTRY}}",
+  "files": {
+    ".env": "DISCORD_TOKEN=\n# Add other secrets here. Only the panel owner (admin) can read this file.\n",
+    "bot.py": "import os\n\nimport discord\nfrom discord.ext import commands\n\n\ndef load_env(path=\".env\"):\n    if not os.path.exists(path):\n        return\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        for line in handle:\n            line = line.strip()\n            if not line or line.startswith(\"#\") or \"=\" not in line:\n                continue\n            key, value = line.split(\"=\", 1)\n            os.environ.setdefault(key.strip(), value.strip())\n\n\nload_env()\ntoken = os.environ.get(\"DISCORD_TOKEN\")\nif not token:\n    raise SystemExit(\"DISCORD_TOKEN is not set yet. Add it under Startup & Env, then restart.\")\n\nintents = discord.Intents.default()\nintents.message_content = True\nbot = commands.Bot(command_prefix=\"!\", intents=intents)\n\n\n@bot.event\nasync def on_ready():\n    print(f\"Logged in as {bot.user}\")\n\n\n@bot.command()\nasync def ping(ctx):\n    await ctx.reply(\"Pong!\")\n\n\nbot.run(token)\n",
+    "requirements.txt": "discord.py>=2.4.0\npython-dotenv>=1.0.1\n"
+  },
+  "variables": [
+    {
+      "key": "ENTRY",
+      "label": "Entry file",
+      "default": "bot.py",
+      "required": true,
+      "description": "Main bot file."
+    },
+    {
+      "key": "DISCORD_TOKEN",
+      "label": "Discord bot token",
+      "default": "",
+      "required": false,
+      "secret": true,
+      "description": "Leave blank while creating. Add it later under Startup & Env."
+    }
+  ]
+}

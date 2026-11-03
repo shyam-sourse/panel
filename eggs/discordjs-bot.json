@@ -1,0 +1,31 @@
+{
+  "id": "discordjs-bot",
+  "name": "Discord Bot (discord.js)",
+  "category": "bot",
+  "icon": "discord",
+  "description": "discord.js v14 bot. The token is never asked while creating the server: the bot starts with an empty .env and you add DISCORD_TOKEN later under Startup & Env, exactly like Pterodactyl.",
+  "installScript": "npm install --omit=dev",
+  "startup": "node {{ENTRY}}",
+  "files": {
+    ".env": "DISCORD_TOKEN=\n# Add other secrets here. Only the panel owner (admin) can read this file.\n",
+    "bot.js": "require(\"dotenv\").config();\nconst { Client, GatewayIntentBits } = require(\"discord.js\");\n\nconst token = process.env.DISCORD_TOKEN;\nif (!token) {\n  console.error(\"DISCORD_TOKEN is not set yet. Add it under Startup & Env, then restart.\");\n  process.exit(0);\n}\n\nconst client = new Client({\n  intents: [\n    GatewayIntentBits.Guilds,\n    GatewayIntentBits.GuildMessages,\n    GatewayIntentBits.MessageContent,\n  ],\n});\n\nclient.once(\"ready\", () => {\n  console.log(`Logged in as ${client.user.tag}`);\n});\n\nclient.on(\"messageCreate\", (message) => {\n  if (message.author.bot) return;\n  if (message.content === \"!ping\") message.reply(\"Pong!\");\n});\n\nclient.login(token);\n",
+    "package.json": "{\n  \"name\": \"discord-bot\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"main\": \"bot.js\",\n  \"scripts\": { \"start\": \"node bot.js\" },\n  \"dependencies\": { \"discord.js\": \"^14.16.3\", \"dotenv\": \"^16.4.5\" }\n}\n"
+  },
+  "variables": [
+    {
+      "key": "ENTRY",
+      "label": "Entry file",
+      "default": "bot.js",
+      "required": true,
+      "description": "Main bot file."
+    },
+    {
+      "key": "DISCORD_TOKEN",
+      "label": "Discord bot token",
+      "default": "",
+      "required": false,
+      "secret": true,
+      "description": "Leave blank while creating. Add it later under Startup & Env, exactly like Pterodactyl."
+    }
+  ]
+}

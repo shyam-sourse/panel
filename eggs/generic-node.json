@@ -1,0 +1,28 @@
+{
+  "id": "generic-node",
+  "name": "Generic Node.js",
+  "category": "application",
+  "icon": "node",
+  "description": "Run any Node.js application. Installs package.json dependencies and starts your entry file.",
+  "installScript": "if [ -f package.json ]; then npm install --omit=dev || npm install; fi",
+  "startup": "node {{ENTRY}}",
+  "files": {
+    "index.js": "const http = require(\"http\");\n\nconst port = Number(process.env.PORT || 3000);\n\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { \"content-type\": \"application/json\" });\n  res.end(JSON.stringify({ ok: true, service: \"terrypanel-node-app\", path: req.url }));\n});\n\nserver.listen(port, \"0.0.0.0\", () => {\n  console.log(`Listening on http://0.0.0.0:${port}`);\n});\n",
+    "package.json": "{\n  \"name\": \"terrypanel-node-app\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"start\": \"node index.js\"\n  }\n}\n"
+  },
+  "variables": [
+    {
+      "key": "ENTRY",
+      "label": "Entry file",
+      "default": "index.js",
+      "required": true,
+      "description": "Main JavaScript file to run."
+    },
+    {
+      "key": "PORT",
+      "label": "Port",
+      "default": "3000",
+      "description": "Port the application listens on."
+    }
+  ]
+}

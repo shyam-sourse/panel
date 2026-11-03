@@ -1,0 +1,21 @@
+{
+  "id": "express-web",
+  "name": "Express Web App",
+  "category": "application",
+  "icon": "node",
+  "description": "Minimal Express web application with a health endpoint and a static public folder.",
+  "installScript": "npm install --omit=dev",
+  "startup": "node server.js",
+  "files": {
+    "server.js": "const express = require(\"express\");\nconst path = require(\"path\");\n\nconst app = express();\nconst port = Number(process.env.PORT || 3000);\n\napp.use(express.static(path.join(__dirname, \"public\")));\napp.get(\"/health\", (req, res) => res.json({ ok: true }));\napp.get(\"/\", (req, res) => res.send(\"Express app running on TerryPanel\"));\n\napp.listen(port, \"0.0.0.0\", () => console.log(`Listening on http://0.0.0.0:${port}`));\n",
+    "package.json": "{\n  \"name\": \"express-app\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"main\": \"server.js\",\n  \"scripts\": { \"start\": \"node server.js\" },\n  \"dependencies\": { \"express\": \"^4.21.2\" }\n}\n",
+    "public/index.html": "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\" /><title>Express on TerryPanel</title></head>\n<body style=\"font-family:system-ui;padding:40px\">\n<h1>Express app is running</h1>\n<p>Edit files in the panel file manager to build your site.</p>\n</body>\n</html>\n"
+  },
+  "variables": [
+    {
+      "key": "PORT",
+      "label": "Port",
+      "default": "3000"
+    }
+  ]
+}

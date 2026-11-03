@@ -1,0 +1,42 @@
+{
+  "id": "minecraft-purpur",
+  "name": "Minecraft: Purpur",
+  "category": "game",
+  "icon": "minecraft",
+  "description": "Purpur server (Paper fork with extra gameplay options). Resolves the newest build automatically.",
+  "installScript": "printf 'eula=true\\n' > eula.txt && node install.js",
+  "startup": "java -Xms{{MEMORY}} -Xmx{{MEMORY}} -jar server.jar --nogui",
+  "files": {
+    "server.properties": "server-port={{SERVER_PORT}}\nmotd={{MOTD}}\nonline-mode={{ONLINE_MODE}}\n",
+    "install.js": "const https = require(\"https\");\nconst fs = require(\"fs\");\nconst version = \"{{MC_VERSION}}\";\n\nfunction get(url) {\n  return new Promise((resolve, reject) => {\n    https.get(url, { headers: { \"user-agent\": \"terrypanel\" } }, (res) => {\n      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {\n        res.resume();\n        return get(res.headers.location).then(resolve, reject);\n      }\n      const chunks = [];\n      res.on(\"data\", (c) => chunks.push(c));\n      res.on(\"end\", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks) }));\n    }).on(\"error\", reject);\n  });\n}\n\n(async () => {\n  const buildsRes = await get(`https://api.purpurmc.org/v2/purpur/${version}`);\n  if (buildsRes.status !== 200) throw new Error(`Purpur API returned ${buildsRes.status} for ${version}`);\n  const data = JSON.parse(buildsRes.body.toString(\"utf8\"));\n  const build = data.builds.latest;\n  console.log(`Downloading Purpur ${version} build ${build}`);\n  const jar = await get(`https://api.purpurmc.org/v2/purpur/${version}/${build}/download`);\n  if (jar.status !== 200) throw new Error(`Purpur download returned ${jar.status}`);\n  fs.writeFileSync(\"server.jar\", jar.body);\n  console.log(`Saved server.jar (${(jar.body.length / 1024 / 1024).toFixed(1)} MB)`);\n})().catch((err) => {\n  console.error(err.message);\n  process.exit(1);\n});\n"
+  },
+  "variables": [
+    {
+      "key": "MC_VERSION",
+      "label": "Minecraft version",
+      "default": "1.21.1",
+      "required": true
+    },
+    {
+      "key": "MEMORY",
+      "label": "Memory (JVM heap)",
+      "default": "2G",
+      "required": true
+    },
+    {
+      "key": "SERVER_PORT",
+      "label": "Server port",
+      "default": "25565"
+    },
+    {
+      "key": "MOTD",
+      "label": "MOTD",
+      "default": "Purpur server on TerryPanel"
+    },
+    {
+      "key": "ONLINE_MODE",
+      "label": "Online mode",
+      "default": "true"
+    }
+  ]
+}

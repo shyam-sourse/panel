@@ -1,0 +1,25 @@
+{
+  "name": "terrypanel",
+  "version": "1.0.0",
+  "description": "A lightweight game and bot hosting panel for any VPS (no KVM required).",
+  "main": "panel/server.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "start": "node panel/server.js",
+    "dev": "node --watch panel/server.js",
+    "daemon": "node daemon/daemon.js",
+    "status": "node cli/status.js",
+    "test": "node test/smoke.js"
+  },
+  "bin": {
+    "terrypanel-status": "cli/status.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "ssh2": "^1.16.0"
+  }
+}

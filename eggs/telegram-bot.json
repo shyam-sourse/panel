@@ -1,0 +1,30 @@
+{
+  "id": "telegram-bot",
+  "name": "Telegram Bot (python-telegram-bot)",
+  "category": "bot",
+  "icon": "python",
+  "description": "Python Telegram bot. No token is asked during creation; add TELEGRAM_TOKEN later under Startup & Env.",
+  "installScript": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt",
+  "startup": ".venv/bin/python {{ENTRY}}",
+  "files": {
+    ".env": "TELEGRAM_TOKEN=\n# Only the panel owner (admin) can read this file.\n",
+    "bot.py": "import os\n\nfrom telegram import Update\nfrom telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes\n\n\ndef load_env(path=\".env\"):\n    if not os.path.exists(path):\n        return\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        for line in handle:\n            line = line.strip()\n            if not line or line.startswith(\"#\") or \"=\" not in line:\n                continue\n            key, value = line.split(\"=\", 1)\n            os.environ.setdefault(key.strip(), value.strip())\n\n\nload_env()\ntoken = os.environ.get(\"TELEGRAM_TOKEN\")\nif not token:\n    raise SystemExit(\"TELEGRAM_TOKEN is not set yet. Add it under Startup & Env, then restart.\")\n\n\nasync def start(update: Update, context: ContextTypes.DEFAULT_TYPE):\n    await update.message.reply_text(\"Hello from TerryPanel!\")\n\n\nasync def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):\n    await update.message.reply_text(\"Pong!\")\n\n\napp = ApplicationBuilder().token(token).build()\napp.add_handler(CommandHandler(\"start\", start))\napp.add_handler(CommandHandler(\"ping\", ping))\nprint(\"Telegram bot started\")\napp.run_polling()\n",
+    "requirements.txt": "python-telegram-bot>=21.0\npython-dotenv>=1.0.1\n"
+  },
+  "variables": [
+    {
+      "key": "ENTRY",
+      "label": "Entry file",
+      "default": "bot.py",
+      "required": true
+    },
+    {
+      "key": "TELEGRAM_TOKEN",
+      "label": "Telegram bot token",
+      "default": "",
+      "required": false,
+      "secret": true,
+      "description": "Leave blank while creating. Add it later under Startup & Env."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "minecraft-forge",
+  "name": "Minecraft: Forge",
+  "category": "game",
+  "icon": "minecraft",
+  "description": "Minecraft Forge modded server. Downloads the Forge installer and installs the server for your chosen Minecraft and Forge version.",
+  "installScript": "printf 'eula=true\\n' > eula.txt && node install.js",
+  "startup": "java -Xms{{MEMORY}} -Xmx{{MEMORY}} @user_jvm_args.txt @libraries/net/minecraftforge/forge/{{MC_VERSION}}-{{FORGE_VERSION}}/unix_args.txt --nogui",
+  "files": {
+    "server.properties": "server-port={{SERVER_PORT}}\nmotd={{MOTD}}\nonline-mode={{ONLINE_MODE}}\n",
+    "user_jvm_args.txt": "-Xmx{{MEMORY}}\n",
+    "install.js": "const https = require(\"https\");\nconst fs = require(\"fs\");\nconst { spawnSync } = require(\"child_process\");\nconst mc = \"{{MC_VERSION}}\";\nconst forge = \"{{FORGE_VERSION}}\";\n\nfunction get(url) {\n  return new Promise((resolve, reject) => {\n    https.get(url, { headers: { \"user-agent\": \"terrypanel\" } }, (res) => {\n      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {\n        res.resume();\n        return get(res.headers.location).then(resolve, reject);\n      }\n      const chunks = [];\n      res.on(\"data\", (c) => chunks.push(c));\n      res.on(\"end\", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks) }));\n    }).on(\"error\", reject);\n  });\n}\n\n(async () => {\n  const url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${mc}-${forge}/forge-${mc}-${forge}-installer.jar`;\n  console.log(`Downloading Forge ${mc}-${forge}`);\n  const jar = await get(url);\n  if (jar.status !== 200) throw new Error(`Forge installer download returned ${jar.status}. Check the Minecraft/Forge version pair.`);\n  fs.writeFileSync(\"forge-installer.jar\", jar.body);\n  console.log(\"Running Forge installer\");\n  const result = spawnSync(\"java\", [\"-jar\", \"forge-installer.jar\", \"--installServer\"], { stdio: \"inherit\" });\n  if (result.status !== 0) throw new Error(`Forge installer exited with code ${result.status}`);\n  console.log(\"Forge server installed. Start with the Start button.\");\n})().catch((err) => {\n  console.error(err.message);\n  process.exit(1);\n});\n"
+  },
+  "variables": [
+    {
+      "key": "MC_VERSION",
+      "label": "Minecraft version",
+      "default": "1.20.1",
+      "required": true
+    },
+    {
+      "key": "FORGE_VERSION",
+      "label": "Forge version",
+      "default": "47.3.0",
+      "required": true,
+      "description": "Forge build that matches your Minecraft version."
+    },
+    {
+      "key": "MEMORY",
+      "label": "Memory (JVM heap)",
+      "default": "2G",
+      "required": true
+    },
+    {
+      "key": "SERVER_PORT",
+      "label": "Server port",
+      "default": "25565"
+    },
+    {
+      "key": "MOTD",
+      "label": "MOTD",
+      "default": "Forge server on TerryPanel"
+    },
+    {
+      "key": "ONLINE_MODE",
+      "label": "Online mode",
+      "default": "true"
+    }
+  ]
+}
