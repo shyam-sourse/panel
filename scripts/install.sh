@@ -4,8 +4,8 @@ set -euo pipefail
 # TerryPanel one-line installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/<you>/terrypanel/main/scripts/install.sh | bash
 
-REPO_URL="${TERRYPANEL_REPO:-https://github.com/shyam-sourse/terrypanel.git}"
-INSTALL_DIR="${TERRYPANEL_DIR:-$HOME/terrypanel}"
+REPO_URL="${TERRYPANEL_REPO:-https://github.com/shyam-sourse/panel.git}"
+INSTALL_DIR="${TERRYPANEL_DIR:-$HOME/panel}"
 PORT="${PORT:-3000}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin123}"
